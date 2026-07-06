@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>静默协议</title>
+<style>
+  :root{
+    --ink:#0b1016;
+    --moat:#8fb3bd;
+    --holo:#c7ecf1;
+    --sand:#c9974a;
+    --paper:#e6e1d5;
+    --dim:#5b6b76;
+    --serif:"Source Han Serif SC","Noto Serif SC","Songti SC","STSong","SimSun",serif;
+    --mono:"SF Mono","Cascadia Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--serif);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:2rem;
+    background-image:repeating-conic-gradient(rgba(255,255,255,.5) 0 .0001%, transparent 0 .0004%);
+  }
+  .wrap{width:100%;max-width:640px;text-align:center}
+  h1{
+    font-size:clamp(2.4rem,9vw,4.2rem);
+    letter-spacing:.4em;
+    font-weight:600;
+    margin-left:.4em;
+    color:var(--paper);
+  }
+  .sub{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.28em;
+    color:var(--dim);
+    margin-top:1.2rem;
+    text-transform:uppercase;
+  }
+  .rule{
+    width:52px;height:1px;background:var(--moat);
+    margin:2.6rem auto;opacity:.5;
+  }
+  .links{display:flex;flex-direction:column;gap:1rem}
+  a.card{
+    display:block;
+    text-decoration:none;
+    color:var(--paper);
+    border:1px solid rgba(143,179,189,.28);
+    padding:1.3rem 1.6rem;
+    text-align:left;
+    transition:border-color .25s, background .25s, transform .25s;
+    background:rgba(143,179,189,.03);
+  }
+  a.card:hover{
+    border-color:var(--moat);
+    background:rgba(143,179,189,.08);
+    transform:translateY(-2px);
+  }
+  .card .zh{font-size:1.15rem;letter-spacing:.12em}
+  .card .en{
+    font-family:var(--mono);
+    font-size:.66rem;
+    letter-spacing:.22em;
+    color:var(--sand);
+    margin-top:.5rem;
+    text-transform:uppercase;
+  }
+  footer{
+    margin-top:3rem;
+    font-family:var(--mono);
+    font-size:.6rem;
+    letter-spacing:.2em;
+    color:var(--dim);
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>静默协议</h1>
+    <div class="sub">Silent Protocol</div>
+    <div class="rule"></div>
+    <div class="links">
+      <a class="card" href="program.html">
+        <div class="zh">组曲 · 音乐会节目单</div>
+        <div class="en">Suite · Concert Program</div>
+      </a>
+      <a class="card" href="archive.html">
+        <div class="zh">残响归档</div>
+        <div class="en">Reverberation Archive</div>
+      </a>
+    </div>
+    <footer>建议使用耳机 · headphones recommended</footer>
+  </div>
+</body>
+</html>

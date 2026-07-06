@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>静默协议 · 残响归档</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+:root{
+  --ink:#0b1016;          /* 岸港的夜 */
+  --ink2:#101823;
+  --moat:#8fb3bd;         /* 护城河水光 */
+  --holo:#c7ecf1;         /* 悬浮字 */
+  --sand:#c9974a;         /* 沙原金 */
+  --paper:#e6e1d5;        /* 雪与纸 */
+  --dim:#5b6b76;
+  --warn:#b0483f;
+  --serif:"Source Han Serif SC","Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --mono:"SF Mono","Cascadia Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--serif);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+/* ---------- 护城河水光（全局背景） ---------- */
+.caustics{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(60% 40% at 20% 80%, rgba(143,179,189,.10), transparent 60%),
+    radial-gradient(50% 35% at 80% 20%, rgba(143,179,189,.07), transparent 60%);
+  animation:drift 26s ease-in-out infinite alternate;
+}
+.caustics.b{animation-duration:37s;animation-direction:alternate-reverse;opacity:.7}
+@keyframes drift{
+  from{transform:translate3d(-2%,1%,0) scale(1)}
+  to{transform:translate3d(2%,-2%,0) scale(1.06)}
+}
+.grain{
+  position:fixed;inset:-50%;pointer-events:none;z-index:1;opacity:.05;
+  background-image:repeating-conic-gradient(rgba(255,255,255,.6) 0 .0001%, transparent 0 .0004%);
+  animation:grain .4s steps(4) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}25%{transform:translate(-1.5%,1%)}
+  50%{transform:translate(1%, -1.5%)}75%{transform:translate(-1%, -1%)}100%{transform:translate(1.5%,1%)}
+}
+/* ---------- 屏幕层 ---------- */
+.screen{
+  position:fixed;inset:0;z-index:2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:6vh 6vw;
+  opacity:0;pointer-events:none;transition:opacity 1.4s ease;
+  overflow-y:auto;
+}
+.screen.on{opacity:1;pointer-events:auto}
+/* ---------- 通用终端文本 ---------- */
+.sys{
+  font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  color:var(--dim);text-transform:uppercase;
+}
+.sys b{color:var(--moat);font-weight:400}
+button{
+  font-family:var(--mono);font-size:13px;letter-spacing:.3em;text-indent:.3em;
+  color:var(--moat);background:transparent;
+  border:1px solid rgba(143,179,189,.35);
+  padding:14px 30px;cursor:pointer;
+  transition:all .5s ease;
+}
+button:hover,button:focus-visible{
+  color:var(--ink);background:var(--moat);outline:none;
+  box-shadow:0 0 34px rgba(143,179,189,.35);
+}
+button.warn{color:var(--warn);border-color:rgba(176,72,63,.45)}
+button.warn:hover,button.warn:focus-visible{background:var(--warn);color:var(--ink);box-shadow:0 0 34px rgba(176,72,63,.3)}
+/* ---------- 接入页 ---------- */
+#boot .kicker{margin-bottom:34px;text-align:center;line-height:2.1}
+#boot h1{
+  font-size:clamp(44px,9vw,96px);font-weight:600;letter-spacing:.28em;text-indent:.28em;
+  color:var(--paper);
+  text-shadow:0 0 60px rgba(143,179,189,.25);
+}
+#boot .sub{
+  margin-top:22px;font-family:var(--mono);font-size:12px;letter-spacing:.5em;text-indent:.5em;
+  color:var(--dim);
+}
+#boot .enter{margin-top:9vh}
+#boot .hint{margin-top:18px;font-family:var(--mono);font-size:11px;color:#3d4a53;letter-spacing:.12em}
+/* ---------- 归档大厅 ---------- */
+#archive{justify-content:flex-start;padding-top:8vh}
+#archive header{width:min(860px,100%);margin-bottom:5vh}
+#archive header .rule{height:1px;background:linear-gradient(90deg,rgba(143,179,189,.4),transparent);margin:14px 0 10px}
+#archive h2{font-size:clamp(20px,3vw,28px);font-weight:500;letter-spacing:.2em;color:var(--paper)}
+.deck{
+  width:min(860px,100%);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;
+}
+.echo{
+  position:relative;border:1px solid rgba(143,179,189,.22);
+  padding:22px 18px 18px;min-height:190px;cursor:pointer;
+  display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(180deg,rgba(16,24,35,.7),rgba(11,16,22,.9));
+  transition:border-color .5s,transform .5s,box-shadow .5s;
+}
+.echo:hover,.echo:focus-visible{border-color:rgba(143,179,189,.7);transform:translateY(-3px);outline:none;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.echo .id{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--dim)}
+.echo .name{font-size:19px;letter-spacing:.14em;margin:14px 0 6px;color:var(--paper)}
+.echo .meta{font-family:var(--mono);font-size:10.5px;line-height:1.9;color:var(--dim);letter-spacing:.06em}
+.echo .wave{
+  height:26px;margin-top:14px;
+  background:repeating-linear-gradient(90deg,rgba(143,179,189,.5) 0 1px,transparent 1px 5px);
+  mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent);
+  animation:flick 1.1s steps(6) infinite;opacity:.5;
+}
+@keyframes flick{0%{transform:scaleY(.4)}30%{transform:scaleY(1)}55%{transform:scaleY(.6)}80%{transform:scaleY(.9)}100%{transform:scaleY(.4)}}
+.echo.done{border-color:rgba(201,151,74,.4)}
+.echo.done .wave{animation:none;transform:scaleY(.35);background:repeating-linear-gradient(90deg,rgba(201,151,74,.6) 0 1px,transparent 1px 5px)}
+.echo.done .id::after{content:" · 已回溯";color:var(--sand)}
+#voteCall{
+  width:min(860px,100%);margin-top:6vh;padding:26px;
+  border:1px solid rgba(176,72,63,.4);
+  display:none;flex-direction:column;gap:14px;
+  background:rgba(176,72,63,.04);
+}
+#voteCall.show{display:flex;animation:rise 1.2s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#voteCall .t{font-size:16px;letter-spacing:.18em;color:var(--paper)}
+#voteCall .sys{text-transform:none;letter-spacing:.1em;line-height:2}
+/* ---------- 记忆场景 ---------- */
+#scene{cursor:pointer}
+#scene .frame{width:min(680px,100%);}
+#scene .loc{
+  font-family:var(--mono);font-size:11px;letter-spacing:.4em;color:var(--dim);
+  margin-bottom:5vh;
+}
+#scene .loc em{font-style:normal;color:var(--moat)}
+.lines{display:flex;flex-direction:column;gap:26px;min-height:46vh}
+.line{opacity:0;transform:translateY(10px);transition:opacity 1.6s ease,transform 1.6s ease;
+  font-size:clamp(16px,2.2vw,19px);line-height:2.1;letter-spacing:.06em;color:#cfd6d2}
+.line.show{opacity:1;transform:none}
+.line.narr{color:#9aa7a6}
+.line.dlg{color:var(--paper)}
+.line.dlg::before{content:"—— ";color:var(--dim)}
+.line.sysline{font-family:var(--mono);font-size:12.5px;letter-spacing:.18em;color:var(--dim)}
+.line.time{font-family:var(--mono);font-size:26px;letter-spacing:.5em;color:var(--moat);text-shadow:0 0 30px rgba(143,179,189,.4)}
+/* 秦霁的悬浮字 */
+.line.holo{display:flex;flex-wrap:wrap;gap:.1em;font-size:clamp(18px,2.6vw,22px)}
+.holo span{
+  color:var(--holo);text-shadow:0 0 14px rgba(199,236,241,.8),0 0 40px rgba(143,179,189,.4);
+  opacity:0;animation:holoIn 1.4s ease forwards;
+  animation-delay:calc(var(--i) * .12s);
+}
+.holo .tag{font-family:var(--mono);font-size:10px;color:var(--dim);width:100%;letter-spacing:.3em;margin-bottom:6px;
+  opacity:0;animation:holoIn 1s ease forwards}
+@keyframes holoIn{
+  from{opacity:0;transform:translateY(8px);filter:blur(4px)}
+  to{opacity:1;transform:none;filter:blur(0)}
+}
+#scene .next{
+  margin-top:6vh;font-family:var(--mono);font-size:11px;color:#3d4a53;letter-spacing:.25em;
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{50%{opacity:.3}}
+#scene .back{display:none;margin-top:5vh}
+/* 场景色调 */
+#scene.tone-sea{background:linear-gradient(180deg,#0a141c 0%,#0d1a24 100%)}
+#scene.tone-sand{background:linear-gradient(180deg,#151009 0%,#1d1409 100%)}
+#scene.tone-sand .line.dlg{color:#ead9b8}
+#scene.tone-hall{background:linear-gradient(180deg,#0e1216 0%,#12181e 100%)}
+#scene.tone-317{background:linear-gradient(180deg,#07090c 0%,#0b0d12 100%)}
+/* ---------- 结局 ---------- */
+#end{cursor:default;text-align:center}
+#end .final{
+  font-size:clamp(18px,3vw,24px);letter-spacing:.14em;line-height:2.4;color:var(--paper);
+  opacity:0;transition:opacity 3s ease;
+}
+#end .final.show{opacity:1}
+#end .clock{
+  margin-top:8vh;font-family:var(--mono);font-size:14px;letter-spacing:.6em;color:var(--dim);
+  opacity:0;transition:opacity 4s ease;
+}
+#end .clock.show{opacity:.55}
+#end .restart{margin-top:10vh;opacity:0;transition:opacity 3s ease 2s}
+#end .restart.show{opacity:1}
+#end.erased{background:#050608}
+#end.kept .final{color:var(--holo);text-shadow:0 0 24px rgba(199,236,241,.5)}
+#end .echoDots{display:flex;gap:26px;justify-content:center;margin-top:7vh;opacity:0;transition:opacity 3s ease}
+#end .echoDots.show{opacity:1}
+#end .echoDots i{
+  width:6px;height:6px;border-radius:50%;background:var(--moat);
+  animation:breathe 4s ease-in-out infinite;
+}
+#end .echoDots i:nth-child(2){animation-delay:1s}
+#end .echoDots i:nth-child(3){animation-delay:2s}
+#end .echoDots i:nth-child(4){animation-delay:3s}
+@keyframes breathe{50%{opacity:.15;transform:scale(.6)}}
+/* 白光扫过 */
+.flash{
+  position:fixed;inset:0;background:#fff;z-index:50;pointer-events:none;
+  opacity:0;transition:opacity .25s ease;
+}
+.flash.go{opacity:1}
+@media (max-width:600px){
+  .screen{padding:5vh 6vw}
+  .deck{grid-template-columns:1fr 1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01s !important;transition-duration:.3s !important}
+  .grain,.caustics{display:none}
+}
+</style>
+</head>
+<body>
+<div class="caustics"></div>
+<div class="caustics b"></div>
+<div class="grain"></div>
+<div class="flash" id="flash"></div>
+
+<!-- 接入 -->
+<section class="screen on" id="boot">
+  <div class="kicker sys">岸港留存中心 · 内部终端<br><b>梁富春项目 / 议题：感官残响权重调整方案（第 6 版）</b></div>
+  <h1>静默协议</h1>
+  <div class="sub">残 响 归 档 · 交 互 二 创</div>
+  <button class="enter" id="btnEnter">接 入 系 统</button>
+  <div class="hint">建议佩戴耳机 · 接入后将播放环境声</div>
+</section>
+
+<!-- 归档大厅 -->
+<section class="screen" id="archive">
+  <header>
+    <div class="sys">身份确认：研究员（临时权限） · 状态：<b>在线</b></div>
+    <div class="rule"></div>
+    <h2>检测到四条查无此人的低权重残响</h2>
+    <div class="sys" style="margin-top:10px;text-transform:none;letter-spacing:.1em">
+      多年来，没人查得出那是谁。表决前，你可以逐条回溯。
+    </div>
+  </header>
+  <div class="deck" id="deck"></div>
+  <div id="voteCall">
+    <div class="sys">程聿的意见写得很干净：无对应实体，无法归档，也无从复原。</div>
+    <div class="t">议案：残响权重归零。现在开始表决。</div>
+    <button class="warn" id="btnVote">进 入 表 决</button>
+  </div>
+</section>
+
+<!-- 记忆场景 -->
+<section class="screen" id="scene">
+  <div class="frame">
+    <div class="loc" id="sceneLoc"></div>
+    <div class="lines" id="sceneLines"></div>
+    <div class="next" id="sceneNext">点击继续</div>
+    <button class="back" id="btnBack">返 回 归 档</button>
+  </div>
+</section>
+
+<!-- 表决 -->
+<section class="screen" id="vote">
+  <div class="frame" style="width:min(640px,100%);text-align:center">
+    <div class="sys" style="margin-bottom:5vh">梁富春项目 · 例行会议 · 深夜<br><b>窗外柳树冒了新芽</b></div>
+    <div class="line dlg show" style="margin-bottom:3vh">“一个查无此人的残响，等于没有发生过。”</div>
+    <div class="line narr show" style="margin-bottom:7vh">大家开始表决。徐维则不知怎么空白了一秒。<br>现在，轮到你了。</div>
+    <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
+      <button class="warn" id="btnErase">举 手 同 意 归 零</button>
+      <button id="btnKeep">拒 绝 表 决</button>
+    </div>
+  </div>
+</section>
+
+<!-- 结局 -->
+<section class="screen" id="end">
+  <div class="final" id="endText"></div>
+  <div class="echoDots" id="endDots"><i></i><i></i><i></i><i></i></div>
+  <div class="clock" id="endClock">03 : 17</div>
+  <button class="restart" id="btnRestart">重 新 接 入</button>
+</section>
+
+<script>
+/* ============ 数据：四条残响 ============ */
+const ECHOES = [
+  {
+    id:"残响-01", name:"海水声", tone:"tone-sea", audio:"sea",
+    meta:"来源：未封存\n频段：低频 · 持续",
+    loc:"回溯中 · <em>南岛 · 旧港 · 夜</em>",
+    lines:[
+      ["narr","旧港很暗。海风吹得防波堤上的铁链一直发出很低的碰撞声。"],
+      ["narr","两个人并肩跑了一小段。港口的灯光在水面上被拉得很碎。"],
+      ["dlg","“你平常也跑？”"],
+      ["dlg","“以前比较常。同步之后，有时候会需要一点身体感。”"],
+      ["narr","他跑步时很安静，呼吸节奏很稳，也不会硬找话题。"],
+      ["dlg","“说不定南岛之后，我可能去了什么特别偏门的地方呢。”"],
+      ["narr","他忽然意识到，自己从岸港到南岛，每一步都是被排好、被调度过来的。没有哪一次，是像她这样，说走就走。"],
+      ["narr","海风从港口另一侧吹过来。远处，有船正在慢慢离岸。"]
+    ]
+  },
+  {
+    id:"残响-02", name:"潮味", tone:"tone-sand", audio:"sand",
+    meta:"标注：干燥的，像太阳晒过的床单\n污染度：不可清洗",
+    loc:"回溯中 · <em>沙原 · 四十八度 · 停电的夜</em>",
+    lines:[
+      ["narr","空调坏了。他蹲在窗边，研究那个坏掉的卡榫。"],
+      ["dlg","“你在干嘛？”"],
+      ["dlg","“它一直响。”"],
+      ["dlg","“明天找人修就好了。”"],
+      ["dlg","“你怎么忍这么久的？”"],
+      ["narr","他修一个没修过的东西，也照样不慌不忙，一步一步，像本来就会。"],
+      ["narr","她忽然有种很轻微的恐惧：如果他真的留下来呢。"],
+      ["narr","她太知道希望是什么东西了。那不是光，是慢性病。"],
+      ["dlg","“那现在至少有个人陪你了。”"],
+      ["narr","她没接话。只是低头看着纸页，直到再也看不清字。"]
+    ]
+  },
+  {
+    id:"残响-03", name:"翻书页的频率", tone:"tone-hall", audio:"page",
+    meta:"载体：一个女人\n节律：稳定 · 无法归档",
+    loc:"回溯中 · <em>岸港 · 留存中心 · 窗边的夕光</em>",
+    lines:[
+      ["narr","橘红的夕阳斜斜打进来，拖着漫长的影子。不管谁先到，总会坐在同一个座位。"],
+      ["holo","感官不是用来被相信的，是会留下的。"],
+      ["dlg","“我信它存在。但不信它稳定。不稳定的东西，不适合用来定义一个人。”"],
+      ["holo","那你会不会其实从来没有见过真正的感觉？"],
+      ["narr","他没有被刺到，反而像是第一次认真看她。"],
+      ["dlg","“有时候我会想，你的版本会比较麻烦，但比较真。”"],
+      ["dlg","“比如光的角度。或者你说话的时候，手指停住的方式。”"],
+      ["narr","说完他自己也愣了一下。像是不应该出现在叙述优先者嘴里的句子。"]
+    ]
+  },
+  {
+    id:"残响-04", name:"凌晨三点十七分的体温", tone:"tone-317", audio:"heart",
+    meta:"重复出现 · 明显持久\n关联残响来源：未封存",
+    loc:"回溯中 · <em>层级过深 · 时间戳损坏</em>",
+    lines:[
+      ["sysline","[ 人格流回放 · 南岛 · 凌晨停电 ]"],
+      ["dlg","“还不睡？”"],
+      ["dlg","“等人。”"],
+      ["narr","然后他像是精准找到了镜头，对着屏幕外说——"],
+      ["dlg","“今天几号？她还没回来吗？”"],
+      ["time","03 : 17"],
+      ["sysline","[ 检测到第二层覆写 · 未授权 ]"],
+      ["dlg","“如果她不回来，那我会继续等下一次醒来。”"],
+      ["narr","第二天早上醒来时，隔壁已经空了。桌上只留了一张纸条。"],
+      ["holo","别送了。"]
+    ]
+  }
+];
+
+/* ============ 状态 ============ */
+const $ = s=>document.querySelector(s);
+const restored = new Set();
+let cur = null, lineIdx = 0, autoTimer = null;
+
+/* ============ 音频（Tone.js） ============ */
+const AU = {ok:false};
+async function initAudio(){
+  if(AU.ok || typeof Tone==="undefined") return;
+  try{
+    await Tone.start();
+    AU.master = new Tone.Gain(0.0).toDestination();
+    AU.master.gain.rampTo(0.8, 3);
+    AU.verb = new Tone.Reverb({decay:9, wet:0.6}).connect(AU.master);
+    // 氛围和声
+    AU.pad = new Tone.PolySynth(Tone.Synth,{
+      oscillator:{type:"sine"},
+      envelope:{attack:5,decay:2,sustain:.7,release:9},
+      volume:-22
+    }).connect(AU.verb);
+    const chords=[["D3","A3","E4"],["B2","F#3","C#4"],["G2","D3","B3"],["A2","E3","B3"]];
+    let ci=0;
+    AU.loop = new Tone.Loop(t=>{
+      AU.pad.triggerAttackRelease(chords[ci%chords.length],"7n",t);
+      ci++;
+    },"8s").start(0);
+    // 海
+    AU.seaGain = new Tone.Gain(0).connect(AU.master);
+    AU.seaFilter = new Tone.Filter(380,"lowpass").connect(AU.seaGain);
+    AU.sea = new Tone.Noise("brown").connect(AU.seaFilter).start();
+    AU.seaLFO = new Tone.LFO({frequency:0.07,min:120,max:620}).start();
+    AU.seaLFO.connect(AU.seaFilter.frequency);
+    // 心跳
+    AU.heart = new Tone.MembraneSynth({volume:-14,octaves:4,pitchDecay:.08}).connect(AU.master);
+    // 翻页
+    AU.page = new Tone.NoiseSynth({noise:{type:"pink"},envelope:{attack:.01,decay:.14,sustain:0},volume:-24}).connect(AU.verb);
+    Tone.Transport.start();
+    AU.ok = true;
+  }catch(e){ /* 静默失败：无声也能体验 */ }
+}
+function setSea(v){ if(AU.ok) AU.seaGain.gain.rampTo(v, 3); }
+function beat(){
+  if(!AU.ok) return;
+  const now = Tone.now();
+  AU.heart.triggerAttackRelease("C1",".18",now);
+  AU.heart.triggerAttackRelease("G0",".18",now+0.26);
+}
+function flipPage(){ if(AU.ok) AU.page.triggerAttackRelease(".1"); }
+let heartInt=null, pageInt=null;
+function setSceneAudio(kind){
+  clearInterval(heartInt); clearInterval(pageInt);
+  if(kind==="sea"){ setSea(0.28); }
+  else if(kind==="sand"){ setSea(0.08); }
+  else if(kind==="page"){ setSea(0); pageInt=setInterval(()=>{ if(Math.random()<.5) flipPage(); }, 3400); }
+  else if(kind==="heart"){ setSea(0.05); heartInt=setInterval(beat, 2400); beat(); }
+  else { setSea(0); }
+}
+
+/* ============ 屏幕切换 ============ */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on");
+}
+function flash(cb){
+  const f=$("#flash");
+  f.classList.add("go");
+  setTimeout(()=>{ f.classList.remove("go"); cb&&cb(); }, 320);
+}
+
+/* ============ 归档大厅 ============ */
+function buildDeck(){
+  const deck=$("#deck"); deck.innerHTML="";
+  ECHOES.forEach((e,i)=>{
+    const d=document.createElement("div");
+    d.className="echo"+(restored.has(i)?" done":"");
+    d.tabIndex=0;
+    d.innerHTML=`<div><div class="id">${e.id}</div>
+      <div class="name">${e.name}</div>
+      <div class="meta">${e.meta.replace(/\n/g,"<br>")}</div></div>
+      <div class="wave"></div>`;
+    const open=()=>openScene(i);
+    d.addEventListener("click",open);
+    d.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" ") open(); });
+    deck.appendChild(d);
+  });
+  if(restored.size===ECHOES.length) $("#voteCall").classList.add("show");
+}
+
+/* ============ 记忆场景 ============ */
+function openScene(i){
+  cur=i; lineIdx=0;
+  const e=ECHOES[i];
+  const sc=$("#scene");
+  sc.className="screen on "+e.tone;
+  document.querySelectorAll(".screen").forEach(s=>{ if(s!==sc) s.classList.remove("on"); });
+  $("#sceneLoc").innerHTML=e.loc;
+  $("#sceneLines").innerHTML="";
+  $("#sceneNext").style.display="block";
+  $("#btnBack").style.display="none";
+  setSceneAudio(e.audio);
+  nextLine();
+}
+function renderLine(l){
+  const [type,text]=l;
+  const div=document.createElement("div");
+  if(type==="holo"){
+    div.className="line holo show";
+    div.innerHTML=`<span class="tag">悬浮字 · 秦霁</span>`+
+      [...text].map((ch,i)=>`<span style="--i:${i}">${ch}</span>`).join("");
+  }else{
+    div.className="line "+(type==="narr"?"narr":type==="dlg"?"dlg":type==="time"?"time":"sysline");
+    div.textContent=text;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>div.classList.add("show")));
+  }
+  $("#sceneLines").appendChild(div);
+  if(cur===3 && type==="time") beat();
+  div.scrollIntoView({behavior:"smooth",block:"end"});
+}
+function nextLine(){
+  const e=ECHOES[cur];
+  if(lineIdx>=e.lines.length){
+    clearTimeout(autoTimer);
+    $("#sceneNext").style.display="none";
+    $("#btnBack").style.display="inline-block";
+    return;
+  }
+  renderLine(e.lines[lineIdx]);
+  lineIdx++;
+  clearTimeout(autoTimer);
+  autoTimer=setTimeout(nextLine, 4200);
+}
+$("#scene").addEventListener("click",ev=>{
+  if(ev.target.id==="btnBack") return;
+  if(lineIdx>0 && lineIdx<=ECHOES[cur].lines.length) nextLine();
+});
+$("#btnBack").addEventListener("click",ev=>{
+  ev.stopPropagation();
+  restored.add(cur);
+  clearTimeout(autoTimer);
+  setSceneAudio(null);
+  buildDeck();
+  show("#archive");
+});
+
+/* ============ 表决与结局 ============ */
+$("#btnVote").addEventListener("click",()=>{
+  setSceneAudio("heart");
+  show("#vote");
+});
+function ending(kind){
+  clearInterval(heartInt); clearInterval(pageInt);
+  const end=$("#end"), txt=$("#endText"), clock=$("#endClock"),
+        dots=$("#endDots"), rs=$("#btnRestart");
+  txt.classList.remove("show"); clock.classList.remove("show");
+  dots.classList.remove("show"); rs.classList.remove("show");
+  if(kind==="erase"){
+    end.className="screen on erased";
+    flash(()=>{
+      show("#end"); end.classList.add("erased");
+      if(AU.ok){ AU.master.gain.rampTo(0.02, 6); setSea(0); }
+      txt.innerHTML="全数同意。<br><br>一个查无此人的残响，<br>等于没有发生过。";
+      setTimeout(()=>txt.classList.add("show"), 800);
+      setTimeout(()=>{ txt.classList.remove("show"); }, 9000);
+      setTimeout(()=>{ clock.classList.add("show"); beat(); }, 11500);
+      setTimeout(()=>{ clock.classList.remove("show"); }, 16000);
+      setTimeout(()=>{ rs.classList.add("show"); }, 18000);
+    });
+  }else{
+    end.className="screen on kept";
+    show("#end");
+    if(AU.ok){ setSea(0.15); }
+    txt.innerHTML=`<span class="sys" style="display:block;margin-bottom:26px;color:var(--warn)">
+      [ 警告：检测到未授权情感响应 · 建议立即返回主整流区 ]</span>
+      你没有举手。<br>表决通过了，权重仍被归零——<br>系统里，她依然查无此人。<br><br>
+      可在某个不可调取区，海水声还在，潮味还在，<br>翻书页的频率还在，凌晨三点十七分的体温，还在。`;
+    setTimeout(()=>txt.classList.add("show"), 600);
+    setTimeout(()=>{ dots.classList.add("show"); }, 4000);
+    setTimeout(()=>{
+      txt.innerHTML+=`<br><br><span style="color:var(--holo);text-shadow:0 0 20px rgba(199,236,241,.6)">
+        “有些东西不是我记得，是它自己还在。”</span>`;
+    }, 6500);
+    setTimeout(()=>{ rs.classList.add("show"); }, 9000);
+  }
+}
+$("#btnErase").addEventListener("click",()=>ending("erase"));
+$("#btnKeep").addEventListener("click",()=>ending("keep"));
+$("#btnRestart").addEventListener("click",()=>location.reload());
+
+/* ============ 接入 ============ */
+$("#btnEnter").addEventListener("click",async ()=>{
+  await initAudio();
+  buildDeck();
+  show("#archive");
+});
+</script>
+</body>
+</html>
