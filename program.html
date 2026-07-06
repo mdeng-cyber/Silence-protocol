@@ -65,6 +65,16 @@ button.play:hover,button.play:focus-visible{color:var(--ink);background:var(--mo
 </style>
 </head>
 <body>
+<style>
+.home-link{position:fixed;top:20px;left:20px;z-index:100;
+  font-family:var(--mono);font-size:11px;letter-spacing:.25em;text-decoration:none;
+  color:var(--moat);border:1px solid rgba(143,179,189,.3);
+  padding:8px 15px;background:rgba(11,16,22,.55);backdrop-filter:blur(4px);
+  transition:color .4s,background .4s,border-color .4s}
+.home-link:hover,.home-link:focus-visible{color:var(--ink);background:var(--moat);
+  border-color:var(--moat);outline:none}
+</style>
+<a href="index.html" class="home-link" aria-label="返回目录">← 目录</a>
 <div class="caustics"></div>
 <div class="wrap">
   <div class="kicker">为中篇小说《静默协议》而作 · 器乐组曲 · 约八分钟</div>
