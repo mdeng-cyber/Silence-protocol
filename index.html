@@ -5,100 +5,80 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>静默协议</title>
 <style>
-  :root{
-    --ink:#0b1016;
-    --moat:#8fb3bd;
-    --holo:#c7ecf1;
-    --sand:#c9974a;
-    --paper:#e6e1d5;
-    --dim:#5b6b76;
-    --serif:"Source Han Serif SC","Noto Serif SC","Songti SC","STSong","SimSun",serif;
-    --mono:"SF Mono","Cascadia Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{
-    background:var(--ink);
-    color:var(--paper);
-    font-family:var(--serif);
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    min-height:100vh;
-    padding:2rem;
-    background-image:repeating-conic-gradient(rgba(255,255,255,.5) 0 .0001%, transparent 0 .0004%);
-  }
-  .wrap{width:100%;max-width:640px;text-align:center}
-  h1{
-    font-size:clamp(2.4rem,9vw,4.2rem);
-    letter-spacing:.4em;
-    font-weight:600;
-    margin-left:.4em;
-    color:var(--paper);
-  }
-  .sub{
-    font-family:var(--mono);
-    font-size:.72rem;
-    letter-spacing:.28em;
-    color:var(--dim);
-    margin-top:1.2rem;
-    text-transform:uppercase;
-  }
-  .rule{
-    width:52px;height:1px;background:var(--moat);
-    margin:2.6rem auto;opacity:.5;
-  }
-  .links{display:flex;flex-direction:column;gap:1rem}
-  a.card{
-    display:block;
-    text-decoration:none;
-    color:var(--paper);
-    border:1px solid rgba(143,179,189,.28);
-    padding:1.3rem 1.6rem;
-    text-align:left;
-    transition:border-color .25s, background .25s, transform .25s;
-    background:rgba(143,179,189,.03);
-  }
-  a.card:hover{
-    border-color:var(--moat);
-    background:rgba(143,179,189,.08);
-    transform:translateY(-2px);
-  }
-  .card .zh{font-size:1.15rem;letter-spacing:.12em}
-  .card .en{
-    font-family:var(--mono);
-    font-size:.66rem;
-    letter-spacing:.22em;
-    color:var(--sand);
-    margin-top:.5rem;
-    text-transform:uppercase;
-  }
-  footer{
-    margin-top:3rem;
-    font-family:var(--mono);
-    font-size:.6rem;
-    letter-spacing:.2em;
-    color:var(--dim);
-  }
+:root{
+  --ink:#0b1016;--ink2:#111a24;--moat:#8fb3bd;--holo:#c7ecf1;
+  --sand:#c9974a;--paper:#e6e1d5;--dim:#5b6b76;--warn:#b0483f;
+  --serif:"Source Han Serif SC","Noto Serif SC","Songti SC","STSong","SimSun",serif;
+  --mono:"SF Mono","Cascadia Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--ink);color:var(--paper);font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+.caustics{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(60% 40% at 15% 85%,rgba(143,179,189,.08),transparent 60%),
+             radial-gradient(50% 35% at 85% 15%,rgba(143,179,189,.06),transparent 60%);
+  animation:drift 30s ease-in-out infinite alternate}
+@keyframes drift{from{transform:translate3d(-2%,1%,0)}to{transform:translate3d(2%,-2%,0) scale(1.05)}}
+.wrap{position:relative;z-index:1;width:100%;max-width:820px;margin:auto;padding:11vh 6vw 12vh}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.35em;color:var(--dim);text-transform:uppercase}
+h1{font-size:clamp(38px,7vw,64px);letter-spacing:.24em;text-indent:.24em;font-weight:600;
+  margin:20px 0 8px;text-shadow:0 0 50px rgba(143,179,189,.2)}
+.subtitle{font-family:var(--mono);font-size:12px;letter-spacing:.4em;color:var(--moat);margin-bottom:44px}
+.epigraph{border-left:1px solid rgba(143,179,189,.3);padding:6px 0 6px 22px;margin-bottom:56px;
+  color:#9aa7a6;line-height:2.1;font-size:14.5px;letter-spacing:.05em}
+/* entry cards, styled after the movement cards */
+a.mov{display:block;text-decoration:none;color:var(--paper);
+  border:1px solid rgba(143,179,189,.2);margin-bottom:26px;padding:30px 30px 28px;
+  background:linear-gradient(180deg,rgba(16,24,35,.65),rgba(11,16,22,.9));
+  transition:border-color .5s,box-shadow .5s,transform .5s}
+a.mov:hover,a.mov:focus-visible{outline:none;border-color:rgba(201,151,74,.55);
+  box-shadow:0 0 44px rgba(201,151,74,.07);transform:translateY(-2px)}
+.mov .num{font-family:var(--mono);font-size:11px;letter-spacing:.35em;color:var(--dim)}
+.mov h2{font-size:clamp(19px,3vw,24px);letter-spacing:.12em;margin:12px 0 4px;font-weight:500}
+.mov .form{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;color:var(--sand);margin-bottom:16px}
+.mov .note{font-size:14px;line-height:2.1;color:#aeb8b3;letter-spacing:.04em;margin-bottom:22px}
+.enter{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.25em;text-indent:.25em;
+  color:var(--moat);border:1px solid rgba(143,179,189,.35);padding:10px 22px;transition:all .45s}
+a.mov:hover .enter{color:var(--sand);border-color:rgba(201,151,74,.5)}
+.foot{margin-top:60px;padding-top:26px;border-top:1px solid rgba(143,179,189,.15);
+  font-family:var(--mono);font-size:11px;line-height:2.2;color:var(--dim);letter-spacing:.1em}
+.foot b{color:var(--moat);font-weight:400}
+@media(prefers-reduced-motion:reduce){.caustics{animation:none}}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>静默协议</h1>
-    <div class="sub">Silent Protocol</div>
-    <div class="rule"></div>
-    <div class="links">
-      <a class="card" href="program.html">
-        <div class="zh">组曲 · 音乐会节目单</div>
-        <div class="en">Suite · Concert Program</div>
-      </a>
-      <a class="card" href="archive.html">
-        <div class="zh">残响归档</div>
-        <div class="en">Reverberation Archive</div>
-      </a>
-    </div>
-    <footer>建议使用耳机 · headphones recommended</footer>
+<div class="caustics"></div>
+<div class="wrap">
+  <div class="kicker">岸港留存中心 · 入口 · ENTRANCE</div>
+  <h1>静默协议</h1>
+  <div class="subtitle">SILENT PROTOCOL</div>
+  <a class="mov" href="program.html">
+    <div class="num">其 一 · I</div>
+    <h2>组曲 · 四章</h2>
+    <div class="form">岸港 · 南岛 · 沙原 · 留存</div>
+    <div class="note">四章音乐，可逐章试听。</div>
+    <span class="enter">进入 →</span>
+  </a>
+
+  <a class="mov" href="archive.html">
+    <div class="num">其 二 · II</div>
+    <h2>残响归档</h2>
+    <div class="form">内部终端 · 档案回放</div>
+    <div class="note">岸港留存中心的内部终端。一段没人查得出署名的残响，在归档系统里被反复回放。</div>
+    <span class="enter">进入 →</span>
+  </a>
+
+  <div class="foot">
+    建议使用耳机聆听 · <b>headphones recommended</b><br>
+    音频需首次点击后播放 · 依赖网络加载合成音色
   </div>
+</div>
+<style>
+.credit{position:fixed;bottom:13px;right:15px;z-index:120;
+  font-family:var(--mono);font-size:9px;letter-spacing:.22em;
+  color:var(--dim);opacity:.55;pointer-events:none;user-select:none}
+</style>
+<div class="credit">designed by M</div>
 </body>
 </html>
